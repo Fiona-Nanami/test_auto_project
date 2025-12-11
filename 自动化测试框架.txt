@@ -1,0 +1,195 @@
+自动化框架模块：
+项目名称
+
+接口自动化内容：
+1. 接口自动化什么时候介入测试:当项目趋于稳定的时候，不在发生变化，可以考虑接口自动化。
+
+2. 接口自动化主要是程序代替人执行测试
+
+3. 接口自动化框架：pytest + requests + yaml + json
+
+api: 封装被测试系统的接口，提供给测试用例调用 --> 软件包 接口调用方式 导入 包名.模块名
+script: --> 软件包 test_case.py 定义测试用例
+data： 存放测试的数据文件，上传合同, 合同文件，json文件 --> 目录 data 文件夹
+report: 存放测试报告，文件 --> 目录 report 文件夹
+common: 存放通用工具类，公共方法，公共变量 --> 软件包
+config:项目的配置信息，公共配置，环境配置 --> config.py
+pytest.ini: pytest的配置文件 --> 文件 pytest.ini
+temps：allure报告的临时文件， 临时文件 json格式 --> 目录 temps 文件夹
+run.py：执行所有测试用例及生成测试报告 --> run.py
+自动化测试文件的命名：文件名字，方法名字必须以test_开头，例如test_login.py, test_add_user.py
+否则，pytest不会识别为测试用例，不会执行。
+
+4. requests请求方式：
+
+requests.请求方式（url，params=None，data=None，json=None，
+headers=None，cookies=None，files=None）
+
+第一种：简单的直接调用请求方式
+requests.get(url,params=None,**kwargs)
+requests.post(url, data=None, json=None, **kwargs)
+requests.put(url, data=None, **kwargs)
+requests.delete(url, **kwargs)
+
+第二种：
+requests.request(method,url,**kwargs)
+**kwargs：可以传入headers，params，data，json，files等参数,参数键值对形式传递，不定长
+URL：请求的url地址
+method：请求的方法，get，post，put，delete等
+params：请求参数，字典类型
+data：传递的是表单数据，字典类型 form-data
+json:传递对象 json格式
+files：上传文件，字典类型，key为文件名，value为文件内容
+
+第三种（高级测试工程师）：
+seesion = requests.Session()
+seesion.requset()
+    method:请求的方法
+    url：请求的url地址
+    params = None：请求参数，字典类型
+    data = None ：传递的是表单数据，字典类型 form-data
+    headers = None：请求头信息，字典类型
+    cookies = None:存储缓存数据
+    files =None：上传文件，字典类型，key为文件名，value为文件内容
+    auth = None：鉴权
+    timeout = None：请求超时时间
+    allow_redirects = True：是否允许重定向
+    proxies = None  代理
+    hooks = None：钩子函数
+    stream = None：是否流式传输
+    verify = None：是否验证证书 https
+    cert = None：客户端证书 CA证书
+    json = None：传递对象 json格式
+
+
+5. requests添加请求头headers：requests.请求方式(url=,json=,headers={})
+注意：如果传递的是json数据，请求头中Content-Type:application/json格式不需要写了，
+因为requests选择json格式就自动添加方式
+
+
+6. 响应数据的字段：
+res.status_code：响应状态码，200表示成功，404表示资源不存在，500表示服务器错误
+res.json()：返回json格式的响应数据,获取我们的token，获取其他接口中对应的值
+res.text：返回字符串格式的响应数据
+res.url：请求的url地址
+res.headers：响应头信息
+res.cookies：响应的cookie信息
+
+
+7. 断言类型
+assert 预期结果 == 实际结果
+assert 预期结果 in 实际结果，实际结果包含值
+
+8. 参数化
+
+@pytest.mark.parametrize("参数名", 数据列表)
+三种参数格式
+1.自己定义: 列表嵌套字典格式
+2.json格式，需要文件操作读取 with open（文件地址，"r",encoding="utf-8"）
+3.yaml格式，需要安装PyYAML库，读取文件 with open（文件地址，"r",encoding="utf-8"）
+
+列表: [A, B, C]
+yaml格式：
+-A
+-B
+-C
+
+字典：{name: Fiona, name2: Lobelia}
+yaml格式：
+name: Fiona
+name2: Lobelia
+
+列表嵌套字典：[{name: Fiona, name2: Lobelia}, {name: Marie, name2: Nanami}]
+- name: Fiona
+  name2: Lobelia
+- name: Marie
+  name2: Nanami
+
+字典嵌套字典：{"girl":"维纳斯",
+  "doax":{"name":"Fiona","age":18,"like_color":"Pink"}}
+girl: 维纳斯
+doax:
+  name: Fiona
+  age: 18
+  like_color: Pink
+
+
+
+9.pytest.ini配置文件 配置allure报告里面的一些配置信息
+
+注意：1.这个配置项原则上不能有注释，如果你要注释的话，千万不要使用中文的（），
+要不然不会识别你的代码信息（alluredir）
+
+2.第一行必须是[pytest],这是pytest的配置文件，必须存在
+
+[pytest]
+addopts = -s --alluredir=./temps(这个文件名字可以随便起)
+--clean-alluredir(将这份文件夹之前的内容全部删除，删除的是alluredir生成的.json文件)
+
+如果只想生成html
+addopts = -vs --html=./测试报告(文件夹名字)/test.html(报告的名字)
+
+# 配置项的测试用例的文件
+testpaths = 接口自动化测试用例文件夹路径 ./script/test_case.py
+
+# 模块的名字
+python_files = test*.py
+
+# 测试用例类，必须以Test开头
+python_classes = Test*
+
+# 测试用例中每个方法
+python_functions = test*
+
+10.Allure报告：
+自动生成报告，需要run.py
+
+if __name__ == '__main__':
+    pytest.main()
+    生成测试报告
+    os.system("allure generate ./temps -o ./测试报告 --clean")
+
+
+11.pytest.fixture用法：
+
+前置处理方法：
+setup_method: 我们在使用封装的方法地址，必须先实例化
+
+后置处理方法：
+teardown__method
+scope="function"：默认是function，表示每个用例执行完毕后，都会销毁实例，如果想在同一个用例中,
+使用同一个实例，可以设置scope="class"
+
+作业与方法，autouse是否自动执行
+
+@pytest.fixture(scope="function", autouse=False) --作用方法：哪个方法调用，就把这个写哪个方法中
+@pytest.fixture(scope="class", autouse=False) --作用类：每一个类调用一次
+@putest,fixture(scope="module", autouse=False) --作用模块：整个模块每一个.py文件都会调用一次
+@pytest.fixture(scope="session", autouse=False) --作用会话：多个文件调用一次
+
+
+yaml数据格式：
+列表: [A, B, C]
+-A
+-B
+-C
+
+字典： {name: value, name2: value2}
+name: value
+name2: value2
+
+列表嵌套字典：[{name: value, name2: value2}, {name: value, name2: value2}]
+- name: value
+  name2: value2
+- name: value
+  name2: value2
+
+字典嵌套字典： {"girl":"维纳斯",
+  "doax":{"name":"Fiona","age":18,"like_color":"Pink"}}
+
+girl: 维纳斯
+doax:
+  name: Fiona
+  age: 18
+  like_color: Pink
+
